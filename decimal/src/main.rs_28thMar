@@ -1,0 +1,38 @@
+use decimal::*;
+fn main() {
+    let t1 = "123.45";
+    let t2 = "6.89";
+    let t3 = "0.89";
+    let t4 = "23.45";
+    let a = Decimal::try_from(t1).unwrap();
+    let b = Decimal::try_from(t2).unwrap();
+    let c = Decimal::try_from(t3).unwrap();
+    let d = Decimal::try_from(t4).unwrap();
+    println!("t1: {}, t2: {}, t3: {}, t4: {}", t1, t2, t3, t4);
+    //println!("a: {}, b: {}, c: {}, d: {}", a, b, c, d);
+    println!("a: {}", a);
+    println!("b: {}", b);
+    println!("c: {}", c);
+    println!("d: {}", d);
+      let mut sum = add_unsigned(&a, &b);
+    println!("Sum of a and b: {}", sum);
+    sum = add_unsigned(&d, &c);
+    println!("Sum of d and c: {}", sum); 
+
+    let mut diff = sub_unsigned(&a, &b);
+    println!("Difference of a and b: {}", diff);
+    diff = sub_unsigned(&d, &c);
+    println!("Difference of d and c: {}", diff);
+
+    let t5 = "765.4321";
+    let t6 = "0.1";
+    let e = Decimal::try_from(t5).unwrap();
+    let f = Decimal::try_from(t6).unwrap();
+    println!("t5: {}, t6: {}", t5, t6);
+    println!("e: {}, f: {}", e, f);
+    let sum = add_unsigned(&e, &f);
+    let proper_sum = e + f;
+    println!("Proper sum of e and f: {}", proper_sum);
+    
+    println!("Sum of e and f: {}", sum);
+}

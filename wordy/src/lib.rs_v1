@@ -1,0 +1,119 @@
+#[derive(PartialEq, Eq)]enum TokenType {
+    Number,
+    Operator,
+}
+
+
+
+
+
+pub fn answer(command: &str) -> Option<i32> {
+    // Parse words list into tokens and numbers
+    // Tokens are "What is" and "plus", "minus", "multiplied", "divided"
+    // Numbers are the integers in the command
+    // list of allowed tokens
+    const ALLOWED_TOKENS: [&str; 8] = ["What is", "plus", "minus", "multiplied by", "divided by" , "raised to the", "power?", "?"];
+    // Pull out the tokens (including numbers)
+    let mut tokens: Vec<&str> = Vec::new();
+    let mut remainder = command.trim();
+    'outer: loop {
+        println! ("Tokens so far: {:?}", tokens);
+        println!( "Remainder: '{}'", remainder);
+        if remainder.is_empty() {
+            break;
+        }
+        for token in ALLOWED_TOKENS {
+            if remainder.starts_with(token) {
+                tokens.push(token);
+                // Remove the token from the command
+                remainder = &remainder[token.len()..].trim();
+                continue 'outer;
+            }
+        }
+        // If no token was found, try to parse a number
+        if let Some(pos) = remainder.find(|c: char| !c.is_digit(10) && c != '-') {
+            let number_str = &remainder[..pos].trim();
+            if let Ok(_number) = number_str.parse::<i32>() {
+                tokens.push(number_str);
+                remainder = &remainder[pos..];
+                // Remove any trailing nd rd th from the number (for exponentials) from the remainder
+                remainder = remainder.trim_start_matches(|c: char| c == 'n' || c == 'd' || c == 'r' || c == 't' || c == 'h');
+                remainder = remainder.trim_start();
+                continue 'outer;
+                
+            } else {
+                // println!("Failed to parse number: '{}'", number_str);
+                return None; // Invalid number  
+            }
+        } else {
+            // The remainder is a number
+            if let Ok(_number) = remainder.parse::<i32>() {
+                tokens.push(remainder);
+                continue 'outer;
+            } else {
+                // println!("Failed to parse number: '{}'", remainder);
+                return None; // Invalid number  
+            }
+        }
+    }
+
+    println!("Got to line 42 , Tokens after parsing: {:?}", tokens);
+    // Now we have a list of tokens and numbers, we can evaluate the expression
+    if tokens.len() < 3 || tokens[0] != "What is" {
+        return None; // Invalid command
+    }
+    println!("Tokens: {:?}", tokens);
+    let mut result = 0;
+    let mut current_operation = None;
+    let mut last_token_type:TokenType = TokenType::Operator; // "number" or "operator"
+    for token in tokens.iter().skip(1) {
+        println!("Token: {}", token);
+        // Check if the token is a number
+        if let Ok(number) = token.parse::<i32>() {
+            if last_token_type == TokenType::Number {
+                println!("Two numbers in a row without an operator. This is invalid.");
+                return None; // Invalid command, two numbers in a row
+            }
+            last_token_type = TokenType::Number;
+            if let Some(op) = current_operation {
+                current_operation = None; // Reset the current operation after using it
+                match op {
+                    "plus" => result += number,
+                    "minus" => result -= number,
+                    "multiplied by" => result *= number,
+                    "divided by" => {
+                        if number == 0 {
+                            return None; // Division by zero    
+                        }
+                        result /= number;
+                    }
+                    "raised to the" => {
+                        if number < 0 {
+                            return None; // Negative exponent not supported
+                        }
+                        result = result.pow(number as u32);
+                    }
+                    "?" | "power?" => {
+                        println!("current_operation is '?', but we got a number. This is invalid.");
+                        if current_operation.is_some() {
+                            return None; // Invalid command, operator without a number
+                        }
+                    } // do nothing, just return the result at the end
+                    _ => return None, // Invalid operation
+                }
+            } else {
+                result = number; // First number sets the initial result
+            }
+
+        } else {
+            if last_token_type == TokenType::Operator {
+                println!("Two operators in a row without a number. This is invalid.");
+                return None; // Invalid command, two operators in a row
+            }
+            last_token_type = TokenType::Operator;
+            current_operation = Some(*token); // Update the current operation
+        }
+    }
+    
+    Some(result)
+}

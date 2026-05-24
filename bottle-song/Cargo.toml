@@ -1,0 +1,10 @@
+[package]
+name = "bottle_song"
+version = "0.1.0"
+edition = "2024"
+
+[dev-dependencies]
+pretty_assertions = "*"
+
+[dependencies]
+convert_case = "0.10.0"

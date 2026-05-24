@@ -1,0 +1,72 @@
+use std::fmt::{Display, Formatter, Result};
+
+pub struct Roman {
+    digits: String,
+}
+
+impl Display for Roman {
+    fn fmt(&self, _f: &mut Formatter<'_>) -> Result {
+        write!(_f, "{}", self.digits.as_str())
+    }
+}
+
+impl From<u32> for Roman {
+    fn from(num: u32) -> Self {
+        let mut digits = String::new();
+        let mut num1 = num;
+        while num1 >= 1000 {
+            digits.push_str("M");
+            num1 -= 1000;
+        }
+
+        if num1 >= 900 {
+            digits.push_str("CM");
+            num1 -= 900;
+        }
+        if num1 >= 500 {
+            digits.push_str("D");
+            num1 -= 500;
+        }
+        if num1 >= 400 {
+            digits.push_str("CD");
+            num1 -= 400;
+        }
+        while num1 >= 100 {
+            digits.push_str("C");
+            num1 -= 100;
+        }
+        if num1 >= 90 {
+            digits.push_str("XC");
+            num1 -= 90;
+        }
+        if num1 >= 50 {
+            digits.push_str("L");
+            num1 -= 50;
+        }
+        if num1 >= 40 {
+            digits.push_str("XL");
+            num1 -= 40;
+        }
+        while num1 >= 10 {
+            digits.push_str("X");
+            num1 -= 10;
+        }
+        if num1 >= 9 {
+            digits.push_str("IX");
+            num1 -= 9;
+        }
+        if num1 >= 5 {
+            digits.push_str("V");
+            num1 -= 5;
+        }
+        if num1 >= 4 {
+            digits.push_str("IV");
+            num1 -= 4;
+        }
+        while num1 > 0 {
+            digits.push_str("I");
+            num1 -= 1;
+        }
+        Roman { digits }
+    }
+}
