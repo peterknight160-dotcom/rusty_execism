@@ -3,7 +3,14 @@ pub type Result = std::result::Result<(), Error>;
 
 pub struct Forth {
     stack: Vec<Value>,
-    definitions: std::collections::HashMap<String, Vec<String>>,
+    definitions: std::collections::HashMap<String, Vec<ActionType>>,
+}
+
+enum ActionType {
+ DefinedWord(String, Vec<String>),
+ Action(String),
+ 
+
 }
 
 #[derive(Debug, PartialEq, Eq)]
