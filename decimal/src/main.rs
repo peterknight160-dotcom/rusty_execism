@@ -1,19 +1,21 @@
 use decimal::*;
+
 fn main() {
+  /*  let d1 = "123.45";
+    let d2 = "67.89";
+    let dec1 = Decimal::try_from(d1).expect("Invalid decimal string");
+    let dec2 = Decimal::try_from(d2).expect("Invalid decimal string");
+    let sum = dec1 + dec2;
+    println!("{} + {} = {}", d1, d2, sum); */
+
+    let d3 = "32";
+    let dec3 = Decimal::try_from(d3).expect("Invalid decimal string");
+    let d4 = "33.1";
+    let dec4 = Decimal::try_from(d4).expect("Invalid decimal string");
+    let diff = dec3 - dec4;
+    println!("{} - {} = {}", d3, d4, diff);
 
 
-    let t5 = "123400.0000";
-    let t6 = "876543.99"; 
-      let e = Decimal::try_from(t5).unwrap();
-    let f = Decimal::try_from(t6).unwrap();
+
    
-    println!("e: {}, f: {}", e, f);
-  /*   let mut sum = add_unsigned(&e, &f);
-    
-    println!("Sum of e and f: {}", sum);
-    sum = add_unsigned(&f, &e);
-    println!("Sum of f and e: {}", sum); */
-
-   let      sum = e+f ;
-    println!("Sum of e and f: {}", sum);
 }
