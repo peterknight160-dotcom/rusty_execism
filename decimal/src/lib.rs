@@ -6,7 +6,10 @@ use core::fmt;
 
 // add.rs contains the implementation of addition for Decimal
 mod add;
-#[derive(Debug)]
+// mult.rs contains the implementation of multiplication for Decimal
+mod mult;
+
+#[derive(Debug,Clone)]
 pub struct Decimal {
     // Use exponent and significand to represent the decimal value
     // value = significand * 10^exponent
@@ -36,6 +39,9 @@ impl Decimal {
         // Parse digits and decimal point
         let mut decimal_point_seen = false;
         for c in chars {
+            if significand.len() > 50 {
+                break;
+            }
             if c == '0' && significand.is_empty() &&  decimal_point_seen {
                 exponent -= 1;
                 continue;
@@ -54,6 +60,16 @@ impl Decimal {
                 return None; // Invalid character
             }
         }
+        if signbit && significand.iter().all(|&d| d == 0) {
+            signbit = false; // If the number is zero, it should not be negative
+        }
+        if significand.is_empty() {
+            significand.push(0); // If there are no digits, the number is zero
+            exponent = 1; // Set exponent to 1 for zero
+        }
+
+         
+        
 
         // Remove leading zeros from significand
         while significand.first() == Some(&0) && significand.len() > 1 {
@@ -61,7 +77,7 @@ impl Decimal {
             exponent -= 1; // Each leading zero removed decreases the exponent
         }
         // Strip trailing zeros from significand 
-        while significand.last() == Some(&0) && significand.len() > 1 {
+        while significand.last() == Some(&0) && significand.len() >= 1 {
             significand.pop();
         
         }
@@ -82,6 +98,32 @@ impl fmt::Display for Decimal {
             if self.signbit {
                 result.push('-');
             }
+            // If the exponent is negative, we need to add leading zeros and a decimal point
+            if exponent <= 0 {
+                result.push('0');
+                result.push('.');
+               while exponent < 0 {
+                   result.push('0');
+                   exponent += 1;
+               }
+            }
+        
+            // Now we can add the digits of the significand, and add a decimal point if we reach the position of the decimal point
+                for &digit in &self.significand {
+                    result.push((digit + b'0') as char);
+                    exponent -= 1;
+                    // is digit is the last digit of the significand and the exponent is 0, we need to avoid adding a decimal point
+                    if exponent == 0 && digit != *self.significand.last().unwrap() {
+                        result.push('.');
+                    }
+                } 
+                // If we have processed all digits but still have an exponent greater than 0, we need to add trailing zeros
+            while exponent > 0 {
+                result.push('0');
+                exponent -= 1;
+            }
+             // If we have processed all digits but still have an exponent less than 0, we need to add leading zeros and a decimal point       
+           /*  
             for &digit in &self.significand {
                 result.push((digit + b'0') as char);
                 exponent -= 1;
@@ -89,18 +131,18 @@ impl fmt::Display for Decimal {
                     result.push('.');
                 }
             }
-            println! ("result: {}, exponent: {}", result, self.exponent);
-            if self.exponent < 1 {
-                for _ in 0..(-exponent) {
-                    // If the exponent is negative, we need to add leading zeros to the front of the result string
-                    result.insert(0, '0');
-                }
-                // Add a decimal point after the first digit if there are more than one digit in the significand
-        
-                    result.insert(1, '.');
-               
+            // If we have processed all digits but still have an exponent greater than 0, we need to add trailing zeros
+            while exponent > 0 {
+                result.push('0');
+                exponent -= 1;
             }
-             
-            write!(f, "{}", result)
+             // If we have processed all digits but still have an exponent less than 0, we need to add leading zeros and a decimal point
+            while exponent < 0 {
+                result.insert(0, '0');
+                exponent += 1;
+            }
+            
+             */
+            write!(f, "{}", result) 
         }
     }
