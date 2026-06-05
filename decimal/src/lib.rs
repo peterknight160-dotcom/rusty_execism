@@ -8,8 +8,9 @@ use core::fmt;
 mod add;
 // mult.rs contains the implementation of multiplication for Decimal
 mod mult;
+mod equality;
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq, Eq)]
 pub struct Decimal {
     // Use exponent and significand to represent the decimal value
     // value = significand * 10^exponent
@@ -39,9 +40,7 @@ impl Decimal {
         // Parse digits and decimal point
         let mut decimal_point_seen = false;
         for c in chars {
-            if significand.len() > 50 {
-                break;
-            }
+          
             if c == '0' && significand.is_empty() &&  decimal_point_seen {
                 exponent -= 1;
                 continue;
@@ -63,27 +62,16 @@ impl Decimal {
         if signbit && significand.iter().all(|&d| d == 0) {
             signbit = false; // If the number is zero, it should not be negative
         }
-        if significand.is_empty() {
-            significand.push(0); // If there are no digits, the number is zero
-            exponent = 1; // Set exponent to 1 for zero
-        }
+      
 
          
         
 
-        // Remove leading zeros from significand
-        while significand.first() == Some(&0) && significand.len() > 1 {
-            significand.remove(0);
-            exponent -= 1; // Each leading zero removed decreases the exponent
-        }
-        // Strip trailing zeros from significand 
-        while significand.last() == Some(&0) && significand.len() >= 1 {
-            significand.pop();
-        
-        }
-
+        cleanup_signficand_and_exponent(&mut significand, &mut exponent);
     
 
+    
+        println!("Parsed Decimal: signbit: {}, significand: {:?}, exponent: {}", signbit, significand, exponent);
         Some(Decimal { signbit, significand, exponent })    
     }
     // Need to implement std:fmt::Display for Decimal to print it
@@ -145,4 +133,25 @@ impl fmt::Display for Decimal {
              */
             write!(f, "{}", result) 
         }
+    }
+
+
+    pub fn cleanup_signficand_and_exponent (signficand : &mut Vec<u8>, exponent: &mut i32)  -> (Vec<u8>, i32) {
+        
+        // Remove leading zeros from significand
+        while signficand.first() == Some(&0) && signficand.len() > 1 {
+            signficand.remove(0);
+            *exponent -= 1; // Each leading zero removed decreases the exponent
+        }
+        // Strip trailing zeros from significand 
+        while signficand.last() == Some(&0) && signficand.len() >= 1 {
+            signficand.pop();
+        
+        }
+          if signficand.len() == 0 {
+            println!("Decimal had no digits, treating as zero");
+            signficand.push(0); // If there are no digits, the number is zero
+            *exponent = 0; // Set exponent to 0 for zero
+        }
+        (signficand.clone(), *exponent)
     }

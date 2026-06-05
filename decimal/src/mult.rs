@@ -1,83 +1,71 @@
 
 
 use crate::Decimal;
-
+use crate::cleanup_signficand_and_exponent;
 
 impl std::ops::Mul for Decimal {
     type Output = Decimal;
 
     fn mul(self, other: Decimal) -> Decimal {
-        //println!( "self: {}, other: {}", self, other);
-        let result_sign = self.signbit ^ other.signbit; // The result will be negative if one of the numbers is negative, but not both
-        let mut result_exponent = self.exponent + other.exponent - 1; // The exponent of the result will be the sum of the exponents of the two numbers
-        let mut result_significand = Vec::new();    
-        let  left_significand: Vec<u8> = self.significand.clone().iter().rev().cloned().collect(); 
-        let  right_significand: Vec<u8> = other.significand.clone().iter().rev().cloned().collect(); 
-         //println!( "left_significand: {:?}, right_significand: {:?}", left_significand, right_significand);
-         
-        // We will multiply the significands together using long multiplication, and store the result in result_significand.
-        for (i, digit) in left_significand.iter().enumerate() {
-            //println!("Multiplying digit {} of left significand: {}", i, digit);
-            // So starting at the right most digit in self, multiply each other significand into a temp 
-            let mut stanza : Vec<u8> = Vec::new();
-            let mut carry =  0;
-            for digit2 in right_significand.iter() {
-                let x = digit * digit2 + carry;
-                stanza.push( x % 10);
-                carry = x /10;
+        let sign = self.signbit ^ other.signbit;
+        let mut exponent = self.exponent + other.exponent - 1;
+
+        // Work with reversed digits (LSB first)
+        let lhs: Vec<u8> = self.significand.iter().rev().copied().collect();
+        let rhs: Vec<u8> = other.significand.iter().rev().copied().collect();
+
+        // Result buffer (max possible length)
+        let mut result = vec![0u8; lhs.len() + rhs.len()];
+                let  carry = 0; 
+        // Long multiplication (more efficient accumulation)
+        for (i, &a) in lhs.iter().enumerate() {
+            let mut carry = 0; 
+
+            for (j, &b) in rhs.iter().enumerate() {
+                let idx = i + j;
+                let tmp = result[idx] + a * b + carry;
+
+                result[idx] = tmp % 10;
+                carry = tmp / 10;
             }
             if carry > 0 {
-                stanza.push(carry);
+                result[i + rhs.len()] += carry;
+               
             }
+            // Is this the last iteration of the outer loop? If so, we need to add any remaining carry to the next position in the result.
+             if i == lhs.len() - 1 && carry > 0 {
+             exponent += 1; // If there's a carry after the last multiplication, we need to increase the exponent by 1 
+             }
             
-             //println!("stanza before shifting: {:?}", stanza);
-             // Then shift the temp to the left by i digits by adding i zeros to the end of the temp
-            for _  in 0..i {
-                stanza.insert(0, 0);
-            }
-              //  println!("stanza after shifting: {:?}\n", stanza);
-            // Now add stanza to result_significand
-            // Align lengths
-            while result_significand.len()  < stanza.len() {
-               result_significand.push(0);
-            }
-            while stanza.len() < result_significand.len() {
-                stanza.insert(0, 0);
-            }
-            //println!("stanza: {:?}, result_significand: {:?}", stanza, result_significand);
-            let mut new_result_significand = Vec::new();    
-            let mut carry = 0;
-            //println!("Adding stanza to result_significand: {:?} + {:?}", stanza, result_significand);
-            for (a, b) in result_significand.iter().zip(stanza.iter()) {
-              
-                let sum = a + b + carry;
-                new_result_significand.push(sum % 10);
-                carry = sum / 10;
-            }
-            if carry > 0 {
-                new_result_significand.push(carry);
-            }
-            //println!("new_result_significand before reversing: {:?}", new_result_significand);
-            result_significand = new_result_significand;
+
+           
         }
-        result_significand.reverse();
-        //println!("result_significand after reversing: {:?}, result_exponent: {}", result_significand, result_exponent);
-            // Remove leading zeros from result_significand
-            while result_significand.first() == Some(&0) && result_significand.len() > 1 {
-                result_significand.remove(0);
-                result_exponent -= 1; // Each leading zero removed decreases the exponent
-            }   
-                // Remove trailing zeros from result_significand
-                while result_significand.last() == Some(&0) && result_significand.len() > 1 {
-                    result_significand.pop();
-                }   
+        if carry > 0 {
+            println!("Final carry after multiplication: {}", carry);
+          exponent += 1; // If there's a carry after the last multiplication, we need to increase the exponent by 1 
+        }
+        println!("Raw multiplication result (reversed): {:?}, carry: {}, exponent: {}", result, 0, exponent);
+         
 
-            Decimal {
-                signbit: result_sign,
-                significand: result_significand,
-                exponent: result_exponent,
-            }
-      
+        // Remove leading zeros (from reversed representation)
+        while result.len() > 1 && *result.last().unwrap() == 0 {
+            result.pop();
+        }
+
+        // Reverse back to normal order
+        result.reverse();
+
+        // Use the cleanup function to remove any leading zeros and adjust the exponent accordingly
+        // Cleanup is in lib.rs, so we need to import it and call it here
+
+        cleanup_signficand_and_exponent(&mut result, &mut exponent);
+
+    
+
+        Decimal {
+            signbit: sign,
+            significand: result,
+            exponent,
+        }
     }
-
 }
