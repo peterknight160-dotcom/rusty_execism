@@ -1,5 +1,7 @@
 use crate::{Decimal, cleanup_signficand_and_exponent};
+// ordering crate::Ordering;
 use std::cmp::Ordering;
+
 
 impl std::ops::Add for Decimal {
     type Output = Decimal;
@@ -32,7 +34,21 @@ impl std::ops::Sub for Decimal {
 }
 
 fn signed_sub(a: Decimal, b: Decimal) -> Decimal {
-    let  result = sub_unsigned(&a, &b);
+
+    // Function sub_unsigned assumes that abs(a) >= abs(b), so we need to compare the two decimals first and then call sub_unsigned with the larger one first
+    let (larger, smaller) = match compare_decimals(&a, &b) {
+        Ordering::Greater => (a.clone(), b.clone()),
+        Ordering::Less => (b.clone(), a.clone()),
+        Ordering::Equal => {
+            return Decimal {
+                signbit: false,
+                significand: vec![0],
+                exponent: 0,
+            }
+        }
+    };
+  
+    let  result = sub_unsigned(&larger, &smaller);
 
     if result.significand == [0] {
         return Decimal { signbit: false, ..result };
@@ -84,14 +100,15 @@ pub fn add_unsigned(d1: &Decimal, d2: &Decimal) -> Decimal {
         result.push(sum % 10);
         carry = sum / 10;
     }
-
+ let mut exp = exponent;
     if carry > 0 {
         result.push(carry);
+        exp  += 1; // If there's a carry after the last addition, we need to increase the exponent by 1
     }
 
     result.reverse();
 
-    let mut exp = exponent;
+   
     cleanup_signficand_and_exponent(&mut result, &mut exp);
 
     Decimal {
@@ -105,6 +122,7 @@ pub fn add_unsigned(d1: &Decimal, d2: &Decimal) -> Decimal {
 // ✅ Unsigned subtraction
 //
 pub fn sub_unsigned(d1: &Decimal, d2: &Decimal) -> Decimal {
+ 
     match compare_decimals(d1, d2) {
         Ordering::Equal => {
             return Decimal {
@@ -117,23 +135,23 @@ pub fn sub_unsigned(d1: &Decimal, d2: &Decimal) -> Decimal {
     }
 
     let (lhs, rhs, exponent) = align_significands(d1, d2);
+   
 
     let mut result = Vec::with_capacity(lhs.len());
     let mut borrow = 0;
 
     for (&a, &b) in lhs.iter().rev().zip(rhs.iter().rev()) {
         let mut diff = a as i32 - b as i32 - borrow;
-
-        if diff < 0 {
+    
+        borrow = 0; // Reset borrow for the next iteration 
+        while diff < 0 {
             diff += 10;
-            borrow = 1;
-        } else {
-            borrow = 0;
+            borrow = 1; // We need to borrow for the next iteration
         }
 
         result.push(diff as u8);
     }
-
+  
     result.reverse();
 
     let mut exp = exponent;

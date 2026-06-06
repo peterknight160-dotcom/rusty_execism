@@ -7,20 +7,20 @@
 use decimal::Decimal;
 
 fn main() {
-  let five = Decimal::try_from("999").unwrap();
-  let point_two = Decimal::try_from("0.9999").unwrap();
-  let neg_point_two = Decimal::try_from("-0.2").unwrap();
-  let two = neg_point_two.clone() * Decimal::try_from("-50").unwrap();
-  let result = five.clone() * point_two.clone();
-  println!("{} * {} = {} [ {:?} ]", five   , point_two, result, result);
 
-  println!("{} * {} = {} [ {:?} ]", neg_point_two, Decimal::try_from("-50").unwrap(), two, two);
-    
+// Output the sum of-6.5   and +5.
+    let a = Decimal::try_from("-6.5").unwrap();
+    let b = Decimal::try_from("5").unwrap();
+    let sum = b.clone() + a.clone();
+    println!("-6.5 + 5 = {}", sum);
+    // Now try the same but with the operands reversed to test commutativity
+    let sum2 = a + b;
+    println!("5 + -6.5 = {}", sum2);
 
-}
-
-    pub fn decimal(input: &str) -> Decimal {
-    Decimal::try_from(input).expect("That was supposed to be a valid value")
-
-   
+    let c= Decimal::try_from("1.5").unwrap();
+    let d = Decimal::try_from("2").unwrap();
+    let diff = c.clone() - d.clone();
+    println!("1.5 - 2 = {}", diff);
+    let diff2 = d - c;
+    println!("2 - 1.5 = {}", diff2);    
 }

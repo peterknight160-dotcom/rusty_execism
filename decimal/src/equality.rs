@@ -18,8 +18,7 @@ impl PartialOrd for Decimal {
             // Reverse sign for negative numbers
             return if (self.exponent < other.exponent) ^ self.signbit { Some(Ordering::Less) } else { Some(Ordering::Greater) };
         }
-        println!("Comparing significands: {:?} and {:?}", self.significand, other.significand);
-        println!("Signbits: self: {}, other: {}", self.signbit, other.signbit);
+      
         // Compare significands but reverse sign for negative numbers
         let self_significand = self.significand.iter().rev();
         let other_significand = other.significand.iter().rev();
